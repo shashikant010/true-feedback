@@ -8,7 +8,7 @@ import mongoose from "mongoose";
 export async function GET(request:Request) {
     await dbConnect()
     const session =  await getServerSession(authOptions)
-    const user:User = session?.user as User
+    const _user:User = session?.user as User
     if(!session || !session.user){
         return Response.json({
             success:false,
@@ -16,33 +16,36 @@ export async function GET(request:Request) {
         },{status:500})
     }
 
-    const userId = new mongoose.Types.ObjectId(user._id)
-    
+    const userId = new mongoose.Types.ObjectId(_user._id)
+    console.log(userId)
    try {
 
     const user = await UserModel.aggregate([
-        {$match:{id:userId}},
-        {$unwind:"$messages"},
-        {$sort:{"$messages.createdAt":-1}},
-        {$group:{_id:'$_id',messages:{$push:"$messages"}}}
-    ])
+        { $match: { _id: userId } },
+        { $unwind: '$message' },
+        { $sort: { 'message.createdAt': -1 } },
+        { $group: { _id: '$_id', messages: { $push: '$message' } } },
+      ]);
 
-    if(!user){
+      console.log(user)
+
+    if(!user|| user.length === 0){
         return Response.json({
             success:false,
             message:"user not found"
         },{status:404})
     }
 
+   const messages = user[0].messages
     return Response.json({
         success:true,
-        message:user[0].messages
+        messages
     },{status:200})
      
 
    } catch (error) {
     
-    console.log("Cant get user messages")
+    console.log("Cant get user messages ",error)
         return Response.json({
             success:false,
             message:"Cant get user messages"
