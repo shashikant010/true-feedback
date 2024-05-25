@@ -4,12 +4,14 @@ import { ApiResponse } from "@/types/ApiResponse";
 
 export async function sendVerificationEmail(email:string,username:string,verifyCode:string):Promise<ApiResponse> {
     try {
-        await resend.emails.send({
+        console.log("Sending email on ",email)
+        const {data, error }=await resend.emails.send({
             from:"onboarding@resend.dev",
             to:email,
             subject:"True Feedback Verification Code",
             react: VerificationEmail({username,otp:verifyCode})
         })
+        console.log({data,error})
 
         return {
             success:true,message:"Verification email sent successfully"
